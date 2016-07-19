@@ -1,0 +1,24 @@
+I: {1_headwaters, 2_lowlands}
+J: {1_forest_wetlands, 2_woods_fields, 3_low_intensity, 4_med_intensity, 5_high_intensity}
+K: {1_riparian_buffer, 2_constructed_wetland, 3_bioretention, 4_rain_Barrel, 5_impervious_removal, 6_permeable_pavement, 7_green_roof}
+T: {1_volume, 2_solids}
+
+cost:
+    1_riparian_buffer:
+        1_forest_wetlands: null
+        2_woods_fields: 21687
+        3_low_intensity: 30670
+        4_med_intensity: 38020
+        5_high_intensity: null 
+    2_constructed_wetland:
+        1_forest_wetlands: null
+        2_woods_fields: 12360
+        3_low_intensity: 15490
+        4_med_intensity: 47525
+        5_high_intensity: 20737     
+    3_bioretention:
+        1_forest_wetlands: null
+        2_woods_fields: null
+        3_low_intensity: 57040
+        4_med_intensity: 69714
+        5_high_intensity: 83044

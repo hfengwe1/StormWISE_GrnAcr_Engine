@@ -92,7 +92,7 @@ def main():
         docString = yaml.dump(doc, default_flow_style=True)
         doc2 = yaml.load(docString)
         yaml_to_ampl(doc2)
-        print docString
+        #print docString
 
 main()
 
