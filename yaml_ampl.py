@@ -6,33 +6,35 @@ def yaml_to_ampl(doc):
     ampl = ""
     for s in sets:  
         ampl = ampl + "set %s := " % s 
-        x = list(doc[s])   
+        x = doc[s]
         for h in sorted(x):
-            ampl += "%s" % h
-        ampl += ";\n"
+            ampl += "%s " % h
+        ampl += ";\n"        
     setsonset = {'KONJ': ('K','J')}
     for s in sorted(setsonset):
         s1 = setsonset[s][1]
-        x = list(doc[s1])
+        x = doc[s1]
         for h in sorted(x):
             ampl = ampl + "set %s[%s] := " % (s,h)
-            value = doc[s][h]
-            if value == None:
+            elements = doc[s][h]
+            if elements == None:
                 value = "" 
-            ampl = ampl + "%s;\n" % value
+                ampl = ampl + "%s;\n" % value 
+            else:
+                for g in sorted(elements):
+                    value = g
+                    ampl += "%s " % value
+                ampl += " ;\n"
     params_1d = {'convert': 'T'}
-    #x = doc['convert']
-    #ampl = ampl + sorted(x)
-    #print doc['convert']['1_volume']
     for p in sorted(params_1d):
-        ampl = ampl + "param %s := " % p
+        ampl = ampl + "param %s :=\n" % p
         s = params_1d[p]
         x = list(doc[s])
         for h in sorted(x):
             value = doc[p][h]
             if value == None:
                 value = '.'  # Ampl data file notation for null value
-            ampl = ampl + "    %s %s" % (h,value)
+            ampl = ampl + "    %s %s\n" % (h,value)
         ampl = ampl + ";\n"
     params_2d = {'cost': ('J','K'),   # specify (row,column)
                  'export': ('J','T'),
@@ -83,7 +85,7 @@ def yaml_to_ampl(doc):
                     ampl = ampl + " %s" % value
             ampl = ampl + "\n"
         ampl = ampl + ";\n"
-        return ampl
+    return ampl
 '''
 def main():
     with open('wingohocking.yaml', 'r') as f:

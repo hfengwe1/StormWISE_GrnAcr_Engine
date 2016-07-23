@@ -5,35 +5,51 @@ K: {1_bioswale, 2_rain_garden, 3_tree_trench, 4_rain_barrel, 5_impervious_remova
 T: {1_volume, 2_sediment, 3_nitrogen, 4_phosphorous}
 
 KONJ:
-    1_open_space:
-        1_bioswale
+    1_open_space: {
+        1_bioswale,
         2_rain_garden
-    2_low_intensity:
-        1_bioswale
-        2_rain_garden
-        3_tree_trench
-        4_rain_barrel
+    }
+    2_low_intensity: {
+        1_bioswale,
+        2_rain_garden,
+        3_tree_trench,
+        4_rain_barrel,
         5_impervious_removal
-    3_med_intensity:
-        1_bioswale
-        2_rain_garden
-        3_tree_trench
-        4_rain_barrel
-        5_impervious_removal
-        6_permeable_pavement
+    }
+    3_med_intensity: {
+        1_bioswale,
+        2_rain_garden,
+        3_tree_trench,
+        4_rain_barrel,
+        5_impervious_removal,
+        6_permeable_pavement,
         7_green_roof
-    4_high_intensity:
-        2_rain_garden
-        3_tree_trench
-        4_rain_barrel
-        5_impervious_removal
-        6_permeable_pavement
+    }
+    4_high_intensity: {
+        2_rain_garden,
+        3_tree_trench,
+        4_rain_barrel,
+        5_impervious_removal,
+        6_permeable_pavement,
         7_green_roof
+    }
     5_decid_forest: null
-    6_shrub_scrub:
-        1_bioswale
+    6_shrub_scrub: {
+        1_bioswale,
         2_rain_garden
+    }
 
+KONJ2:
+    1_open_space: {
+        1_bioswale,
+        2_rain_garden
+    }
+    2_low_intensity: {
+        1_bioswale,
+        2_rain_garden,
+        3_tree_trench,
+        4_rain_barrel,
+        5_impervious_removal}
 convert:
     1_volume:       264.172e-6  # million gallons per cubic meter
     2_sediment:     0.0011  # english ton per kg

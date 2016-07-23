@@ -1,14 +1,19 @@
-set I := 1_headwaters;
-set J := 1_open_space2_low_intensity3_med_intensity4_high_intensity5_decid_forest6_shrub_scrub;
-set K := 1_bioswale2_rain_garden3_tree_trench4_rain_barrel5_impervious_removal6_permeable_pavement7_green_roof;
-set T := 1_volume2_sediment3_nitrogen4_phosphorous;
-set KONJ[1_open_space] := 1_bioswale 2_rain_garden;
-set KONJ[2_low_intensity] := 1_bioswale 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal;
-set KONJ[3_med_intensity] := 1_bioswale 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal 6_permeable_pavement 7_green_roof;
-set KONJ[4_high_intensity] := 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal 6_permeable_pavement 7_green_roof;
+set I := 1_headwaters ;
+set J := 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub ;
+set K := 1_bioswale 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal 6_permeable_pavement 7_green_roof ;
+set T := 1_volume 2_sediment 3_nitrogen 4_phosphorous ;
+set KONJ[1_open_space] := 1_bioswale 2_rain_garden  ;
+set KONJ[2_low_intensity] := 1_bioswale 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal  ;
+set KONJ[3_med_intensity] := 1_bioswale 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal 6_permeable_pavement 7_green_roof  ;
+set KONJ[4_high_intensity] := 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal 6_permeable_pavement 7_green_roof  ;
 set KONJ[5_decid_forest] := ;
-set KONJ[6_shrub_scrub] := 1_bioswale 2_rain_garden;
-param convert :=     1_volume 0.000264172    2_sediment 0.0011    3_nitrogen 2.2    4_phosphorous 2.2;
+set KONJ[6_shrub_scrub] := 1_bioswale 2_rain_garden  ;
+param convert :=
+    1_volume 0.000264172
+    2_sediment 0.0011
+    3_nitrogen 2.2
+    4_phosphorous 2.2
+;
 param area : 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
     1_headwaters  198.2 315.8 613.2 139.5 50.0 4.0
 ;
@@ -37,4 +42,20 @@ param eta :=
     1_headwaters 0.2 0.6 0.6 0.9 0.5 0.82 0.82
     [*,*,4_phosphorous]: 1_bioswale 2_rain_garden 3_tree_trench 4_rain_barrel 5_impervious_removal 6_permeable_pavement 7_green_roof :=
     1_headwaters 0.4 0.7 0.7 0.9 0.5 0.65 0.65
+;
+param f :=
+    [*,*,1_bioswale]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters 0.18 0.16 0.19 . . 0.18
+    [*,*,2_rain_garden]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters 0.82 0.29 0.15 0.15 . 0.18
+    [*,*,3_tree_trench]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters . 0.25 0.16 0.2 . .
+    [*,*,4_rain_barrel]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters . 0.25 0.15 0.2 . .
+    [*,*,5_impervious_removal]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters . 0.05 0.1 0.1 . .
+    [*,*,6_permeable_pavement]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters . . 0.1 0.15 . .
+    [*,*,7_green_roof]: 1_open_space 2_low_intensity 3_med_intensity 4_high_intensity 5_decid_forest 6_shrub_scrub :=
+    1_headwaters . . 0.15 0.2 . .
 ;
