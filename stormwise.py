@@ -8,30 +8,103 @@ and then runs AMPL on the dat file to generate stormwise output
 import yaml
 from subprocess import call
 from yaml_ampl import yaml_to_ampl
-def stormwise():
-    with open('wingohocking.yaml', 'r') as fin:
+def stormwise(inYamlFile):
+    with open(inYamlFile, 'r') as fin:
         doc = yaml.load(fin)
         ampl = yaml_to_ampl(doc)
         # store the structure of the problem as found in the YAML file
-        I = doc['I']
-        J = doc['J']
-        K = doc['K']
-        KONJ = doc['KONJ']
-        T = doc['T']
-        convert = doc['convert']
-    with open('wingohocking.dat', 'w') as fout:     
+        #I = doc['I']
+        #J = doc['J']
+        #K = doc['K']
+        #KONJ = doc['KONJ']
+        #T = doc['T']
+        #convert = doc['convert']
+    with open('min_cost.dat', 'w') as fout:     
         fout.write(ampl)
         fout.close()
     call(["/Applications/amplide.macosx64/ampl","min_cost.run"])
     with open('min_cost.yaml', 'r') as fin:
         solution = yaml.load(fin)
         x = solution['x']
-        u = solution['u']
-        s = solution['s']
-        
+        return x
+        #u = solution['u']
+        #s = solution['s']
+def upper_bounds(inYamlFile):
+    with open(inYamlFile, 'r') as fin:
+        doc = yaml.load(fin)
+        I = doc['I']
+        J = doc['J']
+        K = doc['K']
+        KONJ = doc['KONJ']
+        cost = doc['cost']
+        f = doc['f']
+        area = doc['area']
+        u = {}  # will be a dictionary of dictionaries
+        for i in sorted(I):
+            uj = {}
+            for j in sorted(J):
+                uk = {}
+                if KONJ[j] != None:
+                    for k in sorted(KONJ[j]):
+                        uk[k] = cost[k][j]*f[k][j][i]*area[j][i]
+                    uj[j] = uk
+            u[i] = uj
+        return u
+    
+def evaluate_solution(inYamlFile,x):
+    #with open('min_cost.yaml', 'r') as fin:
+        #solution = yaml.load(fin)
+        #x = solution['x']
+        #u = solution['u']
+        #s = solution['s']        
         # PRINT OUT RESULTS TO CONSOLE:
+    with open(inYamlFile, 'r') as fin:
+        doc = yaml.load(fin)
+        I = doc['I']
+        J = doc['J']
+        K = doc['K']
+        KONJ = doc['KONJ']
+        T = doc['T']
+        convert = doc['convert']
+        cost = doc['cost']
+        export = doc['export']
+        #print export
+        area = doc['area']
+        eta = doc['eta']
+        f = doc['f']
+        # Compute benefit slopes
+        s = {}   # will be a dictionary of dictionaries
+        for i in sorted(I):
+            sj = {}
+            for j in sorted(J):
+                sk = {}
+                if KONJ[j] != None:
+                    for k in sorted(KONJ[j]):
+                        st = {}
+                        for t in T:
+                            st[t] = eta[t][k][i]*export[t][j]/cost[k][j]
+                        sk[k] = st
+                    sj[j] = sk
+            s[i] = sj
+        #print s
+        # Compute investment upper bounds:
+        '''
+        u = {}  # will be a dictionary of dictionaries
+        for i in sorted(I):
+            uj = {}
+            for j in sorted(J):
+                uk = {}
+                if KONJ[j] != None:
+                    for k in sorted(KONJ[j]):
+                        uk[k] = cost[k][j]*f[k][j][i]*area[j][i]
+                    uj[j] = uk
+            u[i] = uj
+        '''
+
+
         benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
                         '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
+        '''
         print ""
         maxBenefitTotal = {}
         for t in T:
@@ -56,9 +129,8 @@ def stormwise():
                         maxInvestTotal += spend
         maxInvestMillions = maxInvestTotal/1e6
         print "Maximum Total Investment Required:   $%10.2f Million" % maxInvestMillions
-
-
         print ""
+        '''
         benefitTotal = {}
         for t in T:
             tot = 0.0
@@ -148,14 +220,39 @@ def storm_max(inYamlFile):
         convert = doc['convert']
         cost = doc['cost']
         export = doc['export']
+        #print export
         area = doc['area']
         eta = doc['eta']
         f = doc['f']
-        
-        
-        
-param s{i in I,j in J,k in KONJ[j],t in T} = eta[i,k,t]*export[j,t]/cost[j,k];	# calculated benefit slopes
-param u{i in I,j in J,k in KONJ[j]} = cost[j,k]*f[i,j,k]*area[i,j];				# calculated upper spending limits
+        # Compute benefit slopes
+        s = {}   # will be a dictionary of dictionaries
+        for i in sorted(I):
+            sj = {}
+            for j in sorted(J):
+                sk = {}
+                if KONJ[j] != None:
+                    for k in sorted(KONJ[j]):
+                        st = {}
+                        for t in T:
+                            st[t] = eta[t][k][i]*export[t][j]/cost[k][j]
+                        sk[k] = st
+                    sj[j] = sk
+            s[i] = sj
+        #print s
+        # Compute investment upper bounds:
+        u = {}  # will be a dictionary of dictionaries
+        for i in sorted(I):
+            uj = {}
+            for j in sorted(J):
+                uk = {}
+                if KONJ[j] != None:
+                    for k in sorted(KONJ[j]):
+                        uk[k] = cost[k][j]*f[k][j][i]*area[j][i]
+                    uj[j] = uk
+            u[i] = uj
+        #print u        
+#param s{i in I,j in J,k in KONJ[j],t in T} = eta[i,k,t]*export[j,t]/cost[j,k];	# calculated benefit slopes
+#param u{i in I,j in J,k in KONJ[j]} = cost[j,k]*f[i,j,k]*area[i,j];				# calculated upper spending limits
 
         
     #with open('wingohocking.dat', 'w') as fout:     
@@ -169,6 +266,8 @@ param u{i in I,j in J,k in KONJ[j]} = cost[j,k]*f[i,j,k]*area[i,j];				# calcula
      #   s = solution['s']
         
         # PRINT OUT RESULTS TO CONSOLE:
+
+
         benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
                         '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
         print ""
@@ -198,5 +297,12 @@ param u{i in I,j in J,k in KONJ[j]} = cost[j,k]*f[i,j,k]*area[i,j];				# calcula
 
             
 #stormwise()
-storm_max('wingohocking.yaml')
+def main(inYamlFile):
+    x = stormwise(inYamlFile)
+    evaluate_solution(inYamlFile,x)
+    u = upper_bounds(inYamlFile)
+    evaluate_solution(inYamlFile,u)
+
+
+main('wingohocking.yaml')
 

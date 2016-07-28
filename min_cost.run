@@ -1,6 +1,6 @@
 reset;
 model min_cost.mod;
-data wingohocking.dat;
+data min_cost.dat;
 data benefits.dat;
 option solver "/Applications/amplide.macosx64/minos";
 
