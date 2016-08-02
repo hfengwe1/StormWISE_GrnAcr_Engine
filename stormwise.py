@@ -8,17 +8,15 @@ and then runs AMPL on the dat file to generate stormwise output
 import yaml
 from subprocess import call
 from yaml_ampl import yaml_to_ampl
-def stormwise(inYamlFile):
-    with open(inYamlFile, 'r') as fin:
-        doc = yaml.load(fin)
-        ampl = yaml_to_ampl(doc)
-        # store the structure of the problem as found in the YAML file
-        #I = doc['I']
-        #J = doc['J']
-        #K = doc['K']
-        #KONJ = doc['KONJ']
-        #T = doc['T']
-        #convert = doc['convert']
+from collections import defaultdict
+
+def stormwise(inYamlDoc):
+    ampl = yaml_to_ampl(inYamlDoc)
+    # store the structure of the problem as found in the YAML file
+    I = inYamlDoc['I']
+    J = inYamlDoc['J']
+    K = inYamlDoc['K']
+    KONJ = inYamlDoc['KONJ']
     with open('min_cost.dat', 'w') as fout:     
         fout.write(ampl)
         fout.close()
@@ -26,124 +24,147 @@ def stormwise(inYamlFile):
     with open('min_cost.yaml', 'r') as fin:
         solution = yaml.load(fin)
         x = solution['x']
-        return x
-        #u = solution['u']
-        #s = solution['s']
-def upper_bounds(inYamlFile):
-    with open(inYamlFile, 'r') as fin:
-        doc = yaml.load(fin)
-        I = doc['I']
-        J = doc['J']
-        K = doc['K']
-        KONJ = doc['KONJ']
-        cost = doc['cost']
-        f = doc['f']
-        area = doc['area']
-        u = {}  # will be a dictionary of dictionaries
-        for i in sorted(I):
-            uj = {}
-            for j in sorted(J):
-                uk = {}
+        decisions = {}
+        for i in I:  # generate decision variable dictionary
+            jDict = {}
+            for j in J: 
+                kDict = {}
                 if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        uk[k] = cost[k][j]*f[k][j][i]*area[j][i]
-                    uj[j] = uk
-            u[i] = uj
+                    for k in K:                   
+                        if k in KONJ[j]:
+                            kDict[k] = x[i][j][k]
+                        else:
+                            kDict[k] = 0.0
+                else:
+                    for k in K:
+                        kDict[k] = 0.0
+                jDict[j] = kDict
+            decisions[i] = jDict
+        return decisions
+
+def upper_bounds(inYamlDoc):
+        I = inYamlDoc['I']
+        J = inYamlDoc['J']
+        K = inYamlDoc['K']
+        KONJ = inYamlDoc['KONJ']
+        cost = inYamlDoc['cost']
+        f = inYamlDoc['f']
+        area = inYamlDoc['area']
+        u = {}  # will be a dictionary of dictionaries
+        for i in I:  # generate decision variable dictionary
+            jDict = {}
+            for j in J: 
+                kDict = {}
+                if KONJ[j] != None:
+                    for k in K:                   
+                        if k in KONJ[j]:
+                            kDict[k] = cost[k][j]*f[k][j][i]*area[j][i]
+                        else:
+                            kDict[k] = 0.0
+                else:
+                    for k in K:
+                        kDict[k] = 0.0
+                jDict[j] = kDict
+            u[i] = jDict
         return u
-    
-def evaluate_solution(inYamlFile,x):
+
+def benefit_slopes(inYamlDoc):
+        I = inYamlDoc['I']
+        J = inYamlDoc['J']
+        K = inYamlDoc['K']
+        KONJ = inYamlDoc['KONJ']
+        T = inYamlDoc['T']
+        cost = inYamlDoc['cost']
+        export = inYamlDoc['export']
+        eta = inYamlDoc['eta']
+        s = {}  # will be a dictionary of dictionaries
+        for i in I:  # generate decision variable dictionary
+            jDict = {}
+            for j in J: 
+                kDict = {}
+                if KONJ[j] != None:
+                    for k in K:                   
+                        tDict = {}
+                        if k in KONJ[j]:
+                            for t in T:
+                                tDict[t] = eta[t][k][i]*export[t][j]/cost[k][j]
+                        else:
+                            for t in T:
+                                tDict[t] = 0.0
+                        kDict[k] = tDict
+                else:
+                    for k in K:
+                        tDict = {}
+                        for t in T:
+                            tDict[t] = 0.0
+                        kDict[k] = tDict                 
+                jDict[j] = kDict
+            s[i] = jDict
+        return s
+
+def evaluate_solution(inYamlFile,decisions):
     #with open('min_cost.yaml', 'r') as fin:
         #solution = yaml.load(fin)
         #x = solution['x']
         #u = solution['u']
         #s = solution['s']        
         # PRINT OUT RESULTS TO CONSOLE:
+    solutionDict = {}
+    solutionDict['decisions'] = decisions
     with open(inYamlFile, 'r') as fin:
         doc = yaml.load(fin)
         I = doc['I']
         J = doc['J']
         K = doc['K']
-        KONJ = doc['KONJ']
         T = doc['T']
-        convert = doc['convert']
         cost = doc['cost']
         export = doc['export']
-        #print export
         area = doc['area']
         eta = doc['eta']
         f = doc['f']
         # Compute benefit slopes
         s = {}   # will be a dictionary of dictionaries
-        for i in sorted(I):
-            sj = {}
-            for j in sorted(J):
-                sk = {}
+        for i in I:
+            jDict = {}
+            for j in J:
+                kDict = {}
                 if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        st = {}
+                    for k in KONJ[j]:
+                        tDict = {}
                         for t in T:
-                            st[t] = eta[t][k][i]*export[t][j]/cost[k][j]
-                        sk[k] = st
-                    sj[j] = sk
-            s[i] = sj
-        #print s
-        # Compute investment upper bounds:
+                            tDict[t] = eta[t][k][i]*export[t][j]/cost[k][j]
+                        kDict[k] = tDict
+                    jDict[j] = kDict
+            s[i] = jDict
         '''
-        u = {}  # will be a dictionary of dictionaries
-        for i in sorted(I):
-            uj = {}
-            for j in sorted(J):
-                uk = {}
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        uk[k] = cost[k][j]*f[k][j][i]*area[j][i]
-                    uj[j] = uk
-            u[i] = uj
-        '''
-
-
         benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
                         '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
         '''
-        print ""
-        maxBenefitTotal = {}
-        for t in T:
-            maxtot = 0.0
-            for i in sorted(I):
-                for j in sorted(J):
-                    if KONJ[j] != None:
-                        for k in sorted(KONJ[j]):
-                            spend = u[i][j][k]
-                            maxtot += convert[t]*s[i][j][k][t]*spend
-            maxBenefitTotal[t] = maxtot
-        print "Maximum Benefit Totals:"      
-        for t in sorted(maxBenefitTotal):
-            print "    %s:  %10.4f %s" % (t,maxBenefitTotal[t],benefitUnits[t])
-
-        maxInvestTotal = 0.0
+        benefits = {}
+        totalsByBenefit = {}
+        totalsByBenefitByZone = {}
+        totalsByBenefitByLanduse = {}
+        totalsByBenefitByGi = {}
+        benefitsByZoneByLanduseByGi = {}
+        
+        tot = 0.0
         for i in sorted(I):
             for j in sorted(J):
+                b_ijt
                 if KONJ[j] != None:
                     for k in sorted(KONJ[j]):
-                        spend = u[i][j][k]
-                        maxInvestTotal += spend
-        maxInvestMillions = maxInvestTotal/1e6
-        print "Maximum Total Investment Required:   $%10.2f Million" % maxInvestMillions
-        print ""
-        '''
-        benefitTotal = {}
-        for t in T:
-            tot = 0.0
-            for i in sorted(I):
-                for j in sorted(J):
-                    if KONJ[j] != None:
-                        for k in sorted(KONJ[j]):
-                            spend = x[i][j][k]
-                            tot += convert[t]*s[i][j][k][t]*spend
-            benefitTotal[t] = tot
+                        b_ijk = {}
+                        tot_ijk = 0
+                        for t in T:
+                            benefit = s[i][j][k][t]*x[i][j][k] #individual benefit
+                            b_ijk[t] = benefit
+                            tot_ijk += benefit
+                        
+        totalsByBenefit[t] = tot
+        solutionDict['totalsByBenefit'] = totalsByBenefit
         print "Actual Benefit Totals:"      
-        for t in sorted(benefitTotal):
-            print "    %s:  %10.4f %s" % (t,benefitTotal[t],benefitUnits[t])
+        for t in sorted(totalsByBenefit):
+            print "    %s:  %10.4f %s" % (t,totalsByBenefit[t],'fundamental units')
         
         investTotal = 0.0
         for i in sorted(I):
@@ -205,6 +226,9 @@ def evaluate_solution(inYamlFile,x):
     #print zoneTot
     #print luTot
     #print giTot
+    solutionStr = yaml.dump(solutionDict)
+    print "\n\nsolutionStr printout:"
+    print solutionStr
     return ()
 
 def storm_max(inYamlFile):
@@ -298,10 +322,19 @@ def storm_max(inYamlFile):
             
 #stormwise()
 def main(inYamlFile):
-    x = stormwise(inYamlFile)
-    evaluate_solution(inYamlFile,x)
-    u = upper_bounds(inYamlFile)
-    evaluate_solution(inYamlFile,u)
+    with open(inYamlFile, 'r') as fin:
+        inYamlDoc = yaml.load(fin)
+    decisions = stormwise(inYamlDoc)
+#    evaluate_solution(inYamlFile,decisions)
+    u = upper_bounds(inYamlDoc)
+#    evaluate_solution(inYamlFile,u)
+    s = benefit_slopes(inYamlDoc)
+    print "\nDECISIONS:"
+    print yaml.dump(decisions)
+    print "\nUPPER BOUNDS:"
+    print yaml.dump(u)
+    print "\nBENEFIT SLOPES:"
+    print yaml.dump(s)
 
 
 main('wingohocking.yaml')
