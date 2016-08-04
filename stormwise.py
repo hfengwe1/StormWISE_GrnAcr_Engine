@@ -102,7 +102,7 @@ def benefit_slopes(inYamlDoc):
             s[i] = jDict
         return s
 
-def evaluate_solution(inYamlFile,decisions):
+def evaluate_solution(decisions,s):
     #with open('min_cost.yaml', 'r') as fin:
         #solution = yaml.load(fin)
         #x = solution['x']
@@ -122,6 +122,7 @@ def evaluate_solution(inYamlFile,decisions):
         area = doc['area']
         eta = doc['eta']
         f = doc['f']
+        '''
         # Compute benefit slopes
         s = {}   # will be a dictionary of dictionaries
         for i in I:
@@ -136,6 +137,7 @@ def evaluate_solution(inYamlFile,decisions):
                         kDict[k] = tDict
                     jDict[j] = kDict
             s[i] = jDict
+        '''
         '''
         benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
                         '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
@@ -325,10 +327,11 @@ def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)
     decisions = stormwise(inYamlDoc)
-#    evaluate_solution(inYamlFile,decisions)
-    u = upper_bounds(inYamlDoc)
-#    evaluate_solution(inYamlFile,u)
     s = benefit_slopes(inYamlDoc)
+    evaluate_solution(inYamlDoc,decisions)
+    u = upper_bounds(inYamlDoc)
+#    evaluate_solution(inYamlDoc,u)
+
     print "\nDECISIONS:"
     print yaml.dump(decisions)
     print "\nUPPER BOUNDS:"

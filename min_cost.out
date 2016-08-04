@@ -1,4 +1,4 @@
-investment = 76271600
+investment = 76271700
 
 x [1_headwaters,*,*] (tr)
 # $2 = 2_low_intensity
@@ -10,7 +10,7 @@ x [1_headwaters,*,*] (tr)
 3_tree_trench              .        4503330   6839740    2316920         .
 4_rain_barrel              .        8025520   6954450    2517270         .
 5_impervious_removal       .        2863080   6181740    1678180         .
-6_permeable_pavement       .           .       393677   18987400         .
+6_permeable_pavement       .           .       393702   18987400         .
 7_green_roof               .           .            0          0         .
 ;
 
