@@ -4,7 +4,7 @@ Created on Wed Aug  3 18:53:23 2016
 
 @author: arthur
 """
-import yaml
+
 from stormwise_tmdl_upper_bounds import upper_bounds
 from stormwise_tmdl_benefit_slopes import benefit_slopes
 
@@ -73,11 +73,12 @@ def generate_ampl_dat_file(inYamlDoc):
                     if k in KONJ[j]:
                         ampl += "  %s %s %s" % (i,j,k)
                         for t in sorted(T):
-                            ampl += "  %10.9f" % benefitSlopes[i][j][k][t]
+                            ampl += "  %15.14f" % benefitSlopes[i][j][k][t]
                         ampl += "\n"
     ampl += ";\n"        
     return ampl
-    
+
+import yaml  
 def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)

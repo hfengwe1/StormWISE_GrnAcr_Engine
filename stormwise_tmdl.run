@@ -10,11 +10,11 @@ solve;
 # Variables x YAML section:
 printf "x:\n" > stormwise_tmdl.yaml;
 for {i in I} {
-    printf "    %s:\n", i >> min_cost.yaml;
+    printf "    %s:\n", i >> stormwise_tmdl.yaml;
     for {j in J} {
-        printf "        %s:\n", j >> min_cost.yaml;
+        printf "        %s:\n", j >> stormwise_tmdl.yaml;
         for {k in KONJ[j]} {
-            printf "            %s: %10.4f\n", k,x[i,j,k].val >> min_cost.yaml;
+            printf "            %s: %10.4f\n", k,x[i,j,k].val >> stormwise_tmdl.yaml;
         }
     }
 }
@@ -32,5 +32,5 @@ for {i in I} {
 #printf "\n" >> investment.csv;
 
 #close investment.csv;
-display investment>min_cost.out;
-display x>>min_cost.out;
+display investment>stormwise_tmdl.out;
+display x>>stormwise_tmdl.out;

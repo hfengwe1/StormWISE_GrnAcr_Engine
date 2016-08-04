@@ -327,17 +327,17 @@ def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)
     decisions = stormwise(inYamlDoc)
-    s = benefit_slopes(inYamlDoc)
-    evaluate_solution(inYamlDoc,decisions)
-    u = upper_bounds(inYamlDoc)
+#    s = benefit_slopes(inYamlDoc)
+#    evaluate_solution(inYamlDoc,decisions)
+#    u = upper_bounds(inYamlDoc)
 #    evaluate_solution(inYamlDoc,u)
 
     print "\nDECISIONS:"
     print yaml.dump(decisions)
-    print "\nUPPER BOUNDS:"
-    print yaml.dump(u)
-    print "\nBENEFIT SLOPES:"
-    print yaml.dump(s)
+#    print "\nUPPER BOUNDS:"
+#    print yaml.dump(u)
+#    print "\nBENEFIT SLOPES:"
+#    print yaml.dump(s)
 
 
 main('wingohocking.yaml')

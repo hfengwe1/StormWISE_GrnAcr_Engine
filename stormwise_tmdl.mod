@@ -1,4 +1,7 @@
-# StormWISE model Cost minimization with multiple benefits as constraints - April 2010
+# StormWISE_TMDL model Cost minimization with multiple benefits as constraints 
+# In this model file, parameters s and u are calculated outside of AMPL, such
+# as by the stormwise_tmdl.py program.
+
 set I;	# drainage zones
 set J; 	# land-use categories
 set K;	# bmp/lid categories

@@ -8,16 +8,16 @@ and then runs AMPL on the dat file to generate stormwise_tmdl output
 """
 import yaml
 from subprocess import call
-import stormwise_tmdl_ampl
+from stormwise_tmdl_ampl import generate_ampl_dat_file
 
 def stormwise(inYamlDoc):
-    ampl = stormwise_tmdl_ampl(inYamlDoc)
+    ampl = generate_ampl_dat_file(inYamlDoc)
     # store the structure of the problem as found in the YAML file
-    with open('min_cost.dat', 'w') as fout:     
+    with open('stormwise_tmdl.dat', 'w') as fout:     
         fout.write(ampl)
         fout.close()
-    call(["/Applications/amplide.macosx64/ampl","min_cost.run"])
-    with open('min_cost.yaml', 'r') as fin:
+    call(["/Applications/amplide.macosx64/ampl","stormwise_tmdl.run"])
+    with open('stormwise_tmdl.yaml', 'r') as fin:
         solution = yaml.load(fin)
         x = solution['x']
         I = inYamlDoc['I']
@@ -65,22 +65,7 @@ def evaluate_solution(decisions,s):
         area = doc['area']
         eta = doc['eta']
         f = doc['f']
-        '''
-        # Compute benefit slopes
-        s = {}   # will be a dictionary of dictionaries
-        for i in I:
-            jDict = {}
-            for j in J:
-                kDict = {}
-                if KONJ[j] != None:
-                    for k in KONJ[j]:
-                        tDict = {}
-                        for t in T:
-                            tDict[t] = eta[t][k][i]*export[t][j]/cost[k][j]
-                        kDict[k] = tDict
-                    jDict[j] = kDict
-            s[i] = jDict
-        '''
+
         '''
         benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
                         '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
@@ -175,112 +160,22 @@ def evaluate_solution(decisions,s):
     print "\n\nsolutionStr printout:"
     print solutionStr
     return ()
-
-def storm_max(inYamlFile):
-    with open(inYamlFile, 'r') as fin:
-        doc = yaml.load(fin)
-        #ampl = yaml_to_ampl(doc)
-        # store the structure of the problem as found in the YAML file
-        I = doc['I']
-        J = doc['J']
-        K = doc['K']
-        KONJ = doc['KONJ']
-        T = doc['T']
-        convert = doc['convert']
-        cost = doc['cost']
-        export = doc['export']
-        #print export
-        area = doc['area']
-        eta = doc['eta']
-        f = doc['f']
-        # Compute benefit slopes
-        s = {}   # will be a dictionary of dictionaries
-        for i in sorted(I):
-            sj = {}
-            for j in sorted(J):
-                sk = {}
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        st = {}
-                        for t in T:
-                            st[t] = eta[t][k][i]*export[t][j]/cost[k][j]
-                        sk[k] = st
-                    sj[j] = sk
-            s[i] = sj
-        #print s
-        # Compute investment upper bounds:
-        u = {}  # will be a dictionary of dictionaries
-        for i in sorted(I):
-            uj = {}
-            for j in sorted(J):
-                uk = {}
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        uk[k] = cost[k][j]*f[k][j][i]*area[j][i]
-                    uj[j] = uk
-            u[i] = uj
-        #print u        
-#param s{i in I,j in J,k in KONJ[j],t in T} = eta[i,k,t]*export[j,t]/cost[j,k];	# calculated benefit slopes
-#param u{i in I,j in J,k in KONJ[j]} = cost[j,k]*f[i,j,k]*area[i,j];				# calculated upper spending limits
-
-        
-    #with open('wingohocking.dat', 'w') as fout:     
-    #    fout.write(ampl)
-    #    fout.close()
-    #call(["/Applications/amplide.macosx64/ampl","min_cost.run"])
-    #with open('min_cost.yaml', 'r') as fin:
-    #    solution = yaml.load(fin)
-    #    x = solution['x']
-    #    u = solution['u']
-     #   s = solution['s']
-        
-        # PRINT OUT RESULTS TO CONSOLE:
-
-
-        benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
-                        '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
-        print ""
-        maxBenefitTotal = {}
-        for t in T:
-            maxtot = 0.0
-            for i in sorted(I):
-                for j in sorted(J):
-                    if KONJ[j] != None:
-                        for k in sorted(KONJ[j]):
-                            spend = u[i][j][k]
-                            maxtot += convert[t]*s[i][j][k][t]*spend
-            maxBenefitTotal[t] = maxtot
-        print "Maximum Benefit Totals:"      
-        for t in sorted(maxBenefitTotal):
-            print "    %s:  %10.4f %s" % (t,maxBenefitTotal[t],benefitUnits[t])
-
-        maxInvestTotal = 0.0
-        for i in sorted(I):
-            for j in sorted(J):
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        spend = u[i][j][k]
-                        maxInvestTotal += spend
-        maxInvestMillions = maxInvestTotal/1e6
-        print "Maximum Total Investment Required:   $%10.2f Million" % maxInvestMillions
-
             
-#stormwise()
 def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)
     decisions = stormwise(inYamlDoc)
-    s = benefit_slopes(inYamlDoc)
-    evaluate_solution(inYamlDoc,decisions)
-    u = upper_bounds(inYamlDoc)
+#    s = benefit_slopes(inYamlDoc)
+#    evaluate_solution(inYamlDoc,decisions)
+#    u = upper_bounds(inYamlDoc)
 #    evaluate_solution(inYamlDoc,u)
 
     print "\nDECISIONS:"
     print yaml.dump(decisions)
-    print "\nUPPER BOUNDS:"
-    print yaml.dump(u)
-    print "\nBENEFIT SLOPES:"
-    print yaml.dump(s)
+#    print "\nUPPER BOUNDS:"
+#    print yaml.dump(u)
+#    print "\nBENEFIT SLOPES:"
+#    print yaml.dump(s)
 
 
 main('wingohocking.yaml')
