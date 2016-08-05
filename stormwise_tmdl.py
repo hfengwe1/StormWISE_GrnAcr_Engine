@@ -9,6 +9,8 @@ and then runs AMPL on the dat file to generate stormwise_tmdl output
 import yaml
 from subprocess import call
 from stormwise_tmdl_ampl import generate_ampl_dat_file
+from stormwise_tmdl_upper_bounds import upper_bounds
+from stormwise_tmdl_benefit_slopes import benefit_slopes
 
 def stormwise(inYamlDoc):
     ampl = generate_ampl_dat_file(inYamlDoc)
@@ -24,8 +26,9 @@ def stormwise(inYamlDoc):
         J = inYamlDoc['J']
         K = inYamlDoc['K']
         KONJ = inYamlDoc['KONJ']
+        # generate decision variable dictionary filling in zeros where necessary
         decisions = {}
-        for i in I:  # generate decision variable dictionary
+        for i in I:  
             jDict = {}
             for j in J: 
                 kDict = {}
@@ -45,133 +48,338 @@ def stormwise(inYamlDoc):
 
 
 
-def evaluate_solution(decisions,s):
-    #with open('min_cost.yaml', 'r') as fin:
-        #solution = yaml.load(fin)
-        #x = solution['x']
-        #u = solution['u']
-        #s = solution['s']        
-        # PRINT OUT RESULTS TO CONSOLE:
+def evaluate_solution(decisions,s,inYamlDoc):
     solutionDict = {}
     solutionDict['decisions'] = decisions
-    with open(inYamlFile, 'r') as fin:
-        doc = yaml.load(fin)
-        I = doc['I']
-        J = doc['J']
-        K = doc['K']
-        T = doc['T']
-        cost = doc['cost']
-        export = doc['export']
-        area = doc['area']
-        eta = doc['eta']
-        f = doc['f']
+    I = inYamlDoc['I']
+    J = inYamlDoc['J']
+    K = inYamlDoc['K']
+    T = inYamlDoc['T']
 
-        '''
-        benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
-                        '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
-        '''
-        benefits = {}
-        totalsByBenefit = {}
-        totalsByBenefitByZone = {}
-        totalsByBenefitByLanduse = {}
-        totalsByBenefitByGi = {}
-        benefitsByZoneByLanduseByGi = {}
-        
-        tot = 0.0
-        for i in sorted(I):
-            for j in sorted(J):
-                b_ijt
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        b_ijk = {}
-                        tot_ijk = 0
-                        for t in T:
-                            benefit = s[i][j][k][t]*x[i][j][k] #individual benefit
-                            b_ijk[t] = benefit
-                            tot_ijk += benefit
-                        
-        totalsByBenefit[t] = tot
-        solutionDict['totalsByBenefit'] = totalsByBenefit
-        print "Actual Benefit Totals:"      
-        for t in sorted(totalsByBenefit):
-            print "    %s:  %10.4f %s" % (t,totalsByBenefit[t],'fundamental units')
-        
-        investTotal = 0.0
-        for i in sorted(I):
-            for j in sorted(J):
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        spend = x[i][j][k]
-                        investTotal += spend
-        investTotalMillions = investTotal/1e6
-        print "Actual Total Investment Required:   $%10.2f Million" % investTotalMillions
-        # Decision Space Output:
-        print "\nDecision Space Output:"
-        zoneTot = {}
-        luTot = {}
-        giTot = {}
-        for i in sorted(I):  # Compute and output total investments by zone
-            zoneTot[i] = 0.0
-            for j in sorted(J):
-                if KONJ[j] != None:
-                    for k in sorted(KONJ[j]):
-                        zoneTot[i] += x[i][j][k]
-            zoneTotMillions = zoneTot[i]/1e6
-            print '\nZone:  %s with Total investment in zone =  %10.2f Million (details below)' % (i,zoneTotMillions)
-            print '\n%18s' % '',
+    '''
+    benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
+                    '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
+    '''
+    benefits = {}
+    totalsByBenefit = {}
+    totalsByBenefitByZone = {}
+    totalsByBenefitByLanduse = {}
+    totalsByBenefitByGi = {}
+    benefitsByZoneByLanduseByGi = {}
+    totalsByBenefitByZoneByLanduse = {}
+    totalsByBenefitByZoneByGi = {}
+    totalsByBenefitByLanduseByGi = {}
+
+# Individual BENEFITS BY ZONE BY LANDUSE BY GI BY BENEFIT CATEGORY:    
+    #print "Individual benefits by zone by landuse by GI by benefit category (I,J,K,T):"
+    for i in sorted(I):
+        jDict = {}
+        for j in sorted(J):
+            kDict = {}
             for k in sorted(K):
-                print "%16s" % k,
-            print "%18s" % 'Land Use Total'
-            luZoneTot = {}
-            for j in sorted(J):  # compute and output total investments by landuse
-                print "%-18s" % j,
-                luZoneTot[j] = 0.0
+                tDict = {}
+                for t in sorted(T):
+                    tDict[t] = s[i][j][k][t]*decisions[i][j][k] #individual benefit
+                kDict[k] = tDict
+            jDict[j] = kDict
+        benefits[i] = jDict
+    #benefitsYaml = yaml.dump(benefits)
+    #print benefitsYaml
+    solutionDict['benefits'] = benefits
+# INDIVIDUAL BENEFITS BY BENEFIT CATEGORY BY ZONE BY LANDUSE BY GI:   
+    #print "Individual benefits by benefit category by zone by landuse by GI (T,I,J,K)" 
+    for t in sorted(T):
+        iDict = {}
+        for i in sorted(I):
+            jDict = {}
+            for j in sorted(J):
+                kDict = {}
                 for k in sorted(K):
-                    if KONJ[j] != None:
-                        if k in KONJ[j]:
-                            luZoneTot[j] += x[i][j][k]
-                            investMillion = x[i][j][k]/1e6
-                            print "%18.2f" % investMillion,
-                        else:
-                            print "%18.2f" % 0.0,
+                    kDict[k] =  benefits[i][j][k][t]
+                jDict[j] = kDict
+            iDict[i] = jDict
+        benefitsByZoneByLanduseByGi[t] = iDict
+    #totsYaml = yaml.dump(benefitsByZoneByLanduseByGi)
+    #print totsYaml     
+    solutionDict['benefitsByZoneByLanduseByGi'] = benefitsByZoneByLanduseByGi
+# TOTALS BY BENEFIT CATEGORY:   
+    #print "Total benefits by benefit category (T):" 
+    for t in sorted(T):
+        tot_t = 0.0
+        for i in sorted(I):
+            for j in sorted(J):
+                for k in sorted(K):
+                    value = benefits[i][j][k][t]
+                    tot_t += value                    
+        totalsByBenefit[t] = tot_t
+    solutionDict['totalsByBenefit'] = totalsByBenefit
+#   TOTALS BY BENEFIT CATEGORY BY ZONE:
+    #print "Total benefits by benefit category by zone (T,I):"
+    for t in sorted(T):
+        iDict = {}
+        for i in sorted(I):
+            tot_ti = 0.0
+            for j in sorted(J):
+                for k in sorted(K):
+                    tot_ti += benefits[i][j][k][t]
+            iDict[i] = tot_ti
+        totalsByBenefitByZone[t] = iDict
+    solutionDict['totalsByBenefitByZone'] = totalsByBenefitByZone
+    #totsYaml = yaml.dump(totalsByBenefitByZone)
+    #print totsYaml
+# TOTALS BY BENEFIT CATEGORY BY LANDUSE:
+    #print "Total benefits by benefit category by landuse (T,J):"
+    for t in sorted(T):
+        jDict = {}
+        for j in sorted(J):
+            tot_tj = 0.0
+            for i in sorted(I):
+                for k in sorted(K):
+                    tot_tj += benefits[i][j][k][t]
+            jDict[j] = tot_tj
+        totalsByBenefitByLanduse[t] = jDict
+    solutionDict['totalsByBenefitByLanduse'] = totalsByBenefitByLanduse
+    #totsYaml = yaml.dump(totalsByBenefitByLanduse)
+    #print totsYaml 
+# TOTALS BY BENEFIT CATEGORY BY GI:
+    #print "Total benefits by benefit category by gi technology (T,K):"    
+    for t in sorted(T):
+        kDict = {}
+        for k in sorted(K):
+            tot_tk = 0.0
+            for i in sorted(I):
+                for j in sorted(J):
+                    tot_tk += benefits[i][j][k][t]
+            kDict[k] = tot_tk
+        totalsByBenefitByGi[t] = kDict
+    solutionDict['totalsByBenefitByGi'] = totalsByBenefitByGi
+    #totsYaml = yaml.dump(totalsByBenefitByGi)
+    #print totsYaml 
+
+    
+# TOTALS BY BENEFIT BY ZONE BY LANDUSE:
+    #print "Total benefits by benefit category by zone by landuse (T,I,J):"
+    for t in sorted(T):
+        iDict = {}
+        for i in sorted(I):
+            jDict = {}
+            for j in sorted(J):
+                tot_k = 0.0
+                for k in sorted(K):
+                    tot_k += benefits[i][j][k][t]
+                jDict[j] = tot_k
+            iDict[i] = jDict
+        totalsByBenefitByZoneByLanduse[t] = iDict
+    solutionDict['totalsByBenefitByZoneByLanduse'] = totalsByBenefitByZoneByLanduse
+    #totsYaml = yaml.dump(totalsByBenefitByZoneByLanduse)
+    #print totsYaml 
+            
+# TOTALS BY BENEFIT BY ZONE BY GI:
+    #print "Total benefits by benefit category by zone by gi technology (T,I,K)"
+    for t in sorted(T):
+        iDict = {}
+        for i in sorted(I):
+            kDict = {}
+            for k in sorted(K):
+                tot_j = 0.0
+                for j in sorted(J):
+                    tot_j += benefits[i][j][k][t]
+                kDict[k] = tot_j
+            iDict[i] = kDict
+        totalsByBenefitByZoneByGi[t] = iDict
+    solutionDict['totalsByBenefitByZoneByGi'] = totalsByBenefitByZoneByGi
+    #totsYaml = yaml.dump(totalsByBenefitByZoneByGi)
+    #print totsYaml 
+
+# TOTALS BY BENEFIT BY LANDUSE BY GI:
+    #print "Total benefits by benefit category by landuse by gi technology (T,J,K):"
+    for t in sorted(T):
+        jDict = {}
+        for j in sorted(J):
+            kDict = {}
+            for k in sorted(K):
+                tot_i = 0.0
+                for i in sorted(I):
+                    tot_i += benefits[i][j][k][t]
+                kDict[k] = tot_i
+            #print "j = %s" % j
+            jDict[j] = kDict
+        totalsByBenefitByLanduseByGi[t] = jDict
+    solutionDict['totalsByBenefitByLanduseByGi'] = totalsByBenefitByLanduseByGi
+    #totsYaml = yaml.dump(totalsByBenefitByLanduseByGi)
+    #print totsYaml 
+    '''
+# Check overall totals for consistency:
+    print "totalsByBenefit:"
+    totsYaml = yaml.dump(totalsByBenefit)
+    print totsYaml
+    
+    
+    print "\nsumation of benefits:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+    for i in I:
+        for j in J:
+            for k in K:
+                for t in T:
+                    tot[t] += benefits[i][j][k][t]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])
+
+    print "\nsummation of benefitsByZoneByLanduseByGi:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for i in I:
+            for j in J:
+                for k in K:
+                    tot[t] += benefitsByZoneByLanduseByGi[t][i][j][k]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])
+
+    print "\nsummation of totalsByBenefitByZone:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for i in I:
+            tot[t] += totalsByBenefitByZone[t][i]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])
+
+    print "\nsummation of totalsByBenefitByLanduse:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for j in J:
+            tot[t] += totalsByBenefitByLanduse[t][j]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])
+
+    print "\nsummation of totalsByBenefitByGi:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for k in K:
+            tot[t] += totalsByBenefitByGi[t][k]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])   
+
+    print "\nsummation of totalsByBenefitByZoneByLanduse:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for i in I:
+            for j in J:
+                tot[t] += totalsByBenefitByZoneByLanduse[t][i][j]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])  
+
+    print "\nsummation of totalsByBenefitByZoneByGi:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for i in I:
+            for k in K:
+                tot[t] += totalsByBenefitByZoneByGi[t][i][k]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])  
+
+    print "\nsummation of totalsByBenefitByLanduseByGi:"     
+    tot = {}
+    for t in T:
+        tot[t] = 0.0
+        for j in J:
+            for k in K:
+                tot[t] += totalsByBenefitByLanduseByGi[t][j][k]
+    for t in sorted(T):
+        print "%s: %15.7f" % (t,tot[t])  
+    '''
+    '''                
+    totalsByBenefit[t] = tot
+    solutionDict['totalsByBenefit'] = totalsByBenefit
+    print "Actual Benefit Totals:"      
+    for t in sorted(totalsByBenefit):
+        print "    %s:  %10.4f %s" % (t,totalsByBenefit[t],'fundamental units')
+    
+    investTotal = 0.0
+    for i in sorted(I):
+        for j in sorted(J):
+            if KONJ[j] != None:
+                for k in sorted(KONJ[j]):
+                    spend = x[i][j][k]
+                    investTotal += spend
+    investTotalMillions = investTotal/1e6
+    print "Actual Total Investment Required:   $%10.2f Million" % investTotalMillions
+    # Decision Space Output:
+    print "\nDecision Space Output:"
+    zoneTot = {}
+    luTot = {}
+    giTot = {}
+    for i in sorted(I):  # Compute and output total investments by zone
+        zoneTot[i] = 0.0
+        for j in sorted(J):
+            if KONJ[j] != None:
+                for k in sorted(KONJ[j]):
+                    zoneTot[i] += x[i][j][k]
+        zoneTotMillions = zoneTot[i]/1e6
+        print '\nZone:  %s with Total investment in zone =  %10.2f Million (details below)' % (i,zoneTotMillions)
+        print '\n%18s' % '',
+        for k in sorted(K):
+            print "%16s" % k,
+        print "%18s" % 'Land Use Total'
+        luZoneTot = {}
+        for j in sorted(J):  # compute and output total investments by landuse
+            print "%-18s" % j,
+            luZoneTot[j] = 0.0
+            for k in sorted(K):
+                if KONJ[j] != None:
+                    if k in KONJ[j]:
+                        luZoneTot[j] += x[i][j][k]
+                        investMillion = x[i][j][k]/1e6
+                        print "%18.2f" % investMillion,
                     else:
                         print "%18.2f" % 0.0,
-                luZoneTotMillion = luZoneTot[j]/1e6
-                print "%18.2f" % luZoneTotMillion
-                print ''
-                luTot[i] = luZoneTot
-            giZoneTot = {}
-            for k in sorted(K):
-                giZoneTot[k] = 0.0
-                for j in sorted(J):
-                    if KONJ[j] != None:
-                        if k in KONJ[j]:
-                            giZoneTot[k] += x[i][j][k]
-            print "%18s" % "GI Practice Total",
-            giTot[i] = giZoneTot
-            for k in sorted(K):
-                giTotMillion = giZoneTot[k]/1e6
-                print "%18.2f" % giTotMillion,
+                else:
+                    print "%18.2f" % 0.0,
+            luZoneTotMillion = luZoneTot[j]/1e6
+            print "%18.2f" % luZoneTotMillion
+            print ''
+            luTot[i] = luZoneTot
+        giZoneTot = {}
+        for k in sorted(K):
+            giZoneTot[k] = 0.0
+            for j in sorted(J):
+                if KONJ[j] != None:
+                    if k in KONJ[j]:
+                        giZoneTot[k] += x[i][j][k]
+        print "%18s" % "GI Practice Total",
+        giTot[i] = giZoneTot
+        for k in sorted(K):
+            giTotMillion = giZoneTot[k]/1e6
+            print "%18.2f" % giTotMillion,
     #print ''
     #print zoneTot
     #print luTot
     #print giTot
+    '''
     solutionStr = yaml.dump(solutionDict)
     print "\n\nsolutionStr printout:"
     print solutionStr
-    return ()
-            
+    return(solutionDict)  
+          
 def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)
     decisions = stormwise(inYamlDoc)
-#    s = benefit_slopes(inYamlDoc)
-#    evaluate_solution(inYamlDoc,decisions)
+    print "\nDECISIONS:"
+    print yaml.dump(decisions)
+    s = benefit_slopes(inYamlDoc)
+    evaluate_solution(decisions,s,inYamlDoc)
 #    u = upper_bounds(inYamlDoc)
 #    evaluate_solution(inYamlDoc,u)
 
-    print "\nDECISIONS:"
-    print yaml.dump(decisions)
+
 #    print "\nUPPER BOUNDS:"
 #    print yaml.dump(u)
 #    print "\nBENEFIT SLOPES:"
