@@ -64,34 +64,34 @@ def evaluate_solution(decisions,s,inYamlDoc):
                 investmentTotal += decisions[i][j][k]
     solutionDict['investmentTotal'] = investmentTotal
 # Investment totals by Zone:
-    invTotByZone = {}
+    invTotsByZone = {}
     for i in I:
         tot = 0.0
         for j in J:
             for k in K:
                 tot += decisions[i][j][k]
-        invTotByZone[i] = tot
-    solutionDict['invTotByZone'] = invTotByZone 
+        invTotsByZone[i] = tot
+    solutionDict['invTotsByZone'] = invTotsByZone 
 # Investment totals by Landuse:
-    invTotByLanduse = {}
+    invTotsByLanduse = {}
     for j in J:
         tot = 0.0
         for i in I:
             for k in K:
                 tot += decisions[i][j][k]
-        invTotByLanduse[j] = tot
-    solutionDict['invTotByLanduse'] = invTotByLanduse
+        invTotsByLanduse[j] = tot
+    solutionDict['invTotsByLanduse'] = invTotsByLanduse
 # Investment totals by GI technology
-    invTotByGi = {}
+    invTotsByGi = {}
     for k in K:
         tot = 0.0
         for i in I:
             for j in J:
                 tot += decisions[i][j][k]
-        invTotByGi[k] = tot
-    solutionDict['invTotByGi'] = invTotByGi
+        invTotsByGi[k] = tot
+    solutionDict['invTotsByGi'] = invTotsByGi
 # Investment totals by Zone by Landuse:
-    invTotByZoneByLanduse = {}
+    invTotsByZoneByLanduse = {}
     for i in I:
         jDict = {}
         for j in J:
@@ -99,10 +99,10 @@ def evaluate_solution(decisions,s,inYamlDoc):
             for k in K:
                 tot += decisions[i][j][k]
             jDict[j] = tot
-        invTotByZoneByLanduse[i] = jDict
-    solutionDict['invTotByZoneByLanduse'] = invTotByZoneByLanduse
+        invTotsByZoneByLanduse[i] = jDict
+    solutionDict['invTotsByZoneByLanduse'] = invTotsByZoneByLanduse
 # Investment totals by Zone by Gi:
-    invTotByZoneByGi = {}
+    invTotsByZoneByGi = {}
     for i in I:
         kDict = {}
         for k in K:
@@ -110,10 +110,10 @@ def evaluate_solution(decisions,s,inYamlDoc):
             for j in J:
                 tot += decisions[i][j][k]
             kDict[k] = tot
-        invTotByZoneByGi[i] = kDict
-    solutionDict['invTotByZoneByGi'] = invTotByZoneByGi
+        invTotsByZoneByGi[i] = kDict
+    solutionDict['invTotsByZoneByGi'] = invTotsByZoneByGi
 # Investment totals by Landuse by Gi:
-    invTotByLanduseByGi = {}
+    invTotsByLanduseByGi = {}
     for j in J:
         kDict = {}
         for k in K:
@@ -121,8 +121,8 @@ def evaluate_solution(decisions,s,inYamlDoc):
             for i in I:
                 tot += decisions[i][j][k]
             kDict[k] = tot
-        invTotByLanduseByGi[j] = kDict
-    solutionDict['invTotByLanduseByGi'] = invTotByLanduseByGi
+        invTotsByLanduseByGi[j] = kDict
+    solutionDict['invTotsByLanduseByGi'] = invTotsByLanduseByGi
 
     '''
     benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
