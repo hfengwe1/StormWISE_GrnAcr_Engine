@@ -1,22 +1,34 @@
 # -*- coding: utf-8 -*-
 """
 stormwise_tmdl.py
-takes a stormwise input file in YAML format
-computes benefit slopes and investment upper bounds
-outputs an AMPL dat file
-and then runs AMPL on the dat file to generate stormwise_tmdl output
+
+stormwise() function:
+	takes a stormwise input file in YAML format
+	computes benefit slopes and investment upper bounds
+	outputs an AMPL dat file
+	and then runs AMPL on the dat file to generate stormwise_tmdl output
+
+evaluate_solution() function:
+	takes dictionaries containing a solution, benefit slopes, and the YAML document defining the problem
+	and produces a large solutionDict dictionary containing multiple dictionaries for displaying totals
+	of investment decisions and benefits
 """
 import yaml
 from subprocess import call
 from stormwise_tmdl_ampl import generate_ampl_dat_file
-from stormwise_tmdl_upper_bounds import upper_bounds
+from stormwise_tmdl_ampl import generate_ampl_benefit_file
 from stormwise_tmdl_benefit_slopes import benefit_slopes
 
-def stormwise(inYamlDoc):
-    ampl = generate_ampl_dat_file(inYamlDoc)
+def stormwise(inYamlDoc,inYamlBenefitDoc):
+    amplDat = generate_ampl_dat_file(inYamlDoc)
     # store the structure of the problem as found in the YAML file
     with open('stormwise_tmdl.dat', 'w') as fout:     
-        fout.write(ampl)
+        fout.write(amplDat)
+        fout.close()
+
+    amplBenefits = generate_ampl_benefit_file(inYamlBenefitDoc)
+    with open('stormwise_tmdl_benefits.dat', 'w') as fout:
+        fout.write(amplBenefits)
         fout.close()
     call(["/Applications/amplide.macosx64/ampl","stormwise_tmdl.run"])
     with open('stormwise_tmdl.yaml', 'r') as fin:
@@ -56,15 +68,24 @@ def evaluate_solution(decisions,s,inYamlDoc):
     K = inYamlDoc['K']
     T = inYamlDoc['T']
 
-# Investment total:
-    investmentTotal = 0.0
+#  EVALUATE INVESTMENT SOLUTIONS:
+    investmentTotal = 0.0  #  will contain scalar value containing the total optimal investment ($)
+# Investment Totals Dictionaries:
+    invTotsByZone = {}   #  [i]
+    invTotsByLanduse = {}  # [j]
+    invTotsByGi = {}  # [k]
+    invTotsByZoneByLanduse = {}  # [i][j]
+    invTotsByZoneByGi = {}   # [i][k]
+    invTotsByLanduseByGi = {}  #  [j][k]
+
+# Calculate investmentTotal:
     for i in I:
         for j in J:
             for k in K:
                 investmentTotal += decisions[i][j][k]
     solutionDict['investmentTotal'] = investmentTotal
+
 # Investment totals by Zone:
-    invTotsByZone = {}
     for i in I:
         tot = 0.0
         for j in J:
@@ -73,7 +94,6 @@ def evaluate_solution(decisions,s,inYamlDoc):
         invTotsByZone[i] = tot
     solutionDict['invTotsByZone'] = invTotsByZone 
 # Investment totals by Landuse:
-    invTotsByLanduse = {}
     for j in J:
         tot = 0.0
         for i in I:
@@ -82,7 +102,6 @@ def evaluate_solution(decisions,s,inYamlDoc):
         invTotsByLanduse[j] = tot
     solutionDict['invTotsByLanduse'] = invTotsByLanduse
 # Investment totals by GI technology
-    invTotsByGi = {}
     for k in K:
         tot = 0.0
         for i in I:
@@ -91,7 +110,6 @@ def evaluate_solution(decisions,s,inYamlDoc):
         invTotsByGi[k] = tot
     solutionDict['invTotsByGi'] = invTotsByGi
 # Investment totals by Zone by Landuse:
-    invTotsByZoneByLanduse = {}
     for i in I:
         jDict = {}
         for j in J:
@@ -102,7 +120,6 @@ def evaluate_solution(decisions,s,inYamlDoc):
         invTotsByZoneByLanduse[i] = jDict
     solutionDict['invTotsByZoneByLanduse'] = invTotsByZoneByLanduse
 # Investment totals by Zone by Gi:
-    invTotsByZoneByGi = {}
     for i in I:
         kDict = {}
         for k in K:
@@ -113,7 +130,6 @@ def evaluate_solution(decisions,s,inYamlDoc):
         invTotsByZoneByGi[i] = kDict
     solutionDict['invTotsByZoneByGi'] = invTotsByZoneByGi
 # Investment totals by Landuse by Gi:
-    invTotsByLanduseByGi = {}
     for j in J:
         kDict = {}
         for k in K:
@@ -124,19 +140,30 @@ def evaluate_solution(decisions,s,inYamlDoc):
         invTotsByLanduseByGi[j] = kDict
     solutionDict['invTotsByLanduseByGi'] = invTotsByLanduseByGi
 
+#  EVALUATE BENEFIT SOLUTIONS:
+
+#  BENEFIT FUNDAMENTAL UNITS USED IN STORMWISE ENGINE:
+	# Volume: cubic meters
+	# Pollutant Mass:  kilograms
+	# Land Area:  hectare (10^4 square meter)
+
+	# Obsolete:  it is now the responsibility of the displaying functions to convert units
     '''
     benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
                     '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}        
     '''
-    benefits = {}
-    benefitsByZoneByLanduseByGi = {}
-    benTotsByBenefit = {}
-    benTotsByBenefitByZone = {}
-    benTotsByBenefitByLanduse = {}
-    benTotsByBenefitByGi = {}
-    benTotsByBenefitByZoneByLanduse = {}
-    benTotsByBenefitByZoneByGi = {}
-    benTotsByBenefitByLanduseByGi = {}
+
+    benefits = {}   # 4-D dictionary of dictionaries [i][j][k][t]
+    benefitsByZoneByLanduseByGi = {}   # benefits first 4-D dictionary of dictionaries [t][i][j][k]
+
+    #benefit totals dictionaries:  all have [t] first
+    benTotsByBenefit = {}    # [t]
+    benTotsByBenefitByZone = {}   # [t][i]
+    benTotsByBenefitByLanduse = {}   # [t][j]
+    benTotsByBenefitByGi = {}    # [t][k]
+    benTotsByBenefitByZoneByLanduse = {}   # [t][i][j]
+    benTotsByBenefitByZoneByGi = {}    # [t][i][k]
+    benTotsByBenefitByLanduseByGi = {}   # [t][j][k]
 
 # Individual BENEFITS BY ZONE BY LANDUSE BY GI BY BENEFIT CATEGORY:    
     #print "Individual benefits by zone by landuse by GI by benefit category (I,J,K,T):"
@@ -364,11 +391,9 @@ def evaluate_solution(decisions,s,inYamlDoc):
         print "%s: %15.7f" % (t,tot[t])  
     '''
 
-    solutionStr = yaml.dump(solutionDict)
-    print "\n\nsolutionStr printout:"
-    print solutionStr
     return(solutionDict)  
-          
+'''
+import yaml       
 def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)
@@ -376,7 +401,11 @@ def main(inYamlFile):
     print "\nDECISIONS:"
     print yaml.dump(decisions)
     s = benefit_slopes(inYamlDoc)
-    evaluate_solution(decisions,s,inYamlDoc)
+    solutionDict = evaluate_solution(decisions,s,inYamlDoc)
+    solutionStr = yaml.dump(solutionDict)
+    print "\n\nsolutionStr printout:"
+    print solutionStr
+
 #    u = upper_bounds(inYamlDoc)
 #    evaluate_solution(inYamlDoc,u)
 
@@ -387,3 +416,4 @@ def main(inYamlFile):
 #    print yaml.dump(s)
 
 main('wingohocking.yaml')
+'''

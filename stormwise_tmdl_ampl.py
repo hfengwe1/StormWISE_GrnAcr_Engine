@@ -78,6 +78,17 @@ def generate_ampl_dat_file(inYamlDoc):
     ampl += ";\n"        
     return ampl
 
+def generate_ampl_benefit_file(inYamlBenefitDoc):
+    ampl = ''
+    benefitLowerBounds = inYamlBenefitDoc['benefitLowerBounds']  #['benefitLowerBounds']
+    ampl += "data;\nparam Bmin :=\n"
+    for t in sorted(benefitLowerBounds):
+        ampl += "    %s    %20.10f\n" % (t,benefitLowerBounds[t])
+    ampl += ";\n"
+    ampl += "model;\n"
+    return ampl
+
+'''
 import yaml  
 def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
@@ -87,3 +98,16 @@ def main(inYamlFile):
         fout.write(ampl)
         fout.close()
 main('wingohocking.yaml')
+'''
+'''
+import yaml
+def main(inYamlBenefitFile):
+    with open(inYamlBenefitFile, 'r') as fin:
+        inYamlBenefitDoc = yaml.load(fin)
+    ampl = generate_ampl_benefit_file(inYamlBenefitDoc)
+    with open('benefits.dat', 'w') as fout:
+        fout.write(ampl)
+        fout.close()
+
+main('benefits.yaml')
+'''
