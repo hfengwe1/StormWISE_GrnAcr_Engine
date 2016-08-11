@@ -1,19 +1,19 @@
 x:
     1_headwaters:
         1_open_space:
-            1_bioswale: 282042.1817
+            1_bioswale:     0.0000
             2_rain_garden: 2008840.5200
         2_low_intensity:
-            1_bioswale: 1549704.8800
+            1_bioswale:     0.0000
             2_rain_garden: 1418606.1000
             3_tree_trench: 4503334.8400
-            4_rain_barrel: 8025521.7200
+            4_rain_barrel:     0.0000
             5_impervious_removal:     0.0000
         3_med_intensity:
-            1_bioswale: 4429655.1300
+            1_bioswale:     0.0000
             2_rain_garden: 4371370.6600
             3_tree_trench: 6839742.6900
-            4_rain_barrel: 6954453.2700
+            4_rain_barrel: 4298233.7436
             5_impervious_removal:     0.0000
             6_permeable_pavement:     0.0000
             7_green_roof:     0.0000

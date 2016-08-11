@@ -7,12 +7,19 @@ Created on Sun Aug  7 16:33:12 2016
 provide command line input and output for stormwise_tmdl
 """
 import yaml
-import sys
 from copy import deepcopy
 from stormwise_tmdl import stormwise
 from stormwise_tmdl import evaluate_solution
 from stormwise_tmdl_upper_bounds import upper_bounds
 from stormwise_tmdl_benefit_slopes import benefit_slopes
+
+benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
+            '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}   
+benefitConvertUnits =  {'1_volume': 264.172e-6,   # million gallons per cubic meter    
+                        '2_sediment':  0.0011,    # english ton per kg
+                        '3_nitrogen':  2.2,          # pound per kg
+                        '4_phosphorous': 2.2    # pound per kg
+                        } 
 
 def multiply_dict_by_constant(dct,constant):
     for key in sorted(dct):
@@ -50,14 +57,6 @@ def format_and_convert_benefit_dict(dct,formatStr,benefitConvertUnits,benefitUni
     return(displayDict)
         
 def print_output(solutionDict):  
-    
-    benefitUnits = {'1_volume': 'Million Gallons', '2_sediment': 'Tons',
-                '3_nitrogen': 'Pounds', '4_phosphorous': 'Pounds'}   
-    benefitConvertUnits =  {'1_volume': 264.172e-6,   # million gallons per cubic meter    
-                            '2_sediment':  0.0011,    # english ton per kg
-                            '3_nitrogen':  2.2,          # pound per kg
-                            '4_phosphorous': 2.2    # pound per kg
-                            } 
                             
     benTotsByBenefit = solutionDict['benTotsByBenefit']
     displayDict = format_and_convert_benefit_dict(benTotsByBenefit,"%0.2f",benefitConvertUnits,benefitUnits)
@@ -237,7 +236,6 @@ def main():
         except IOError:
             print "\n SORRY:  the file %s can not be found - TRY AGAIN" % inYamlFile
             
-    u = upper_bounds(inYamlDoc)
     s = benefit_slopes(inYamlDoc)
     T = inYamlDoc['T']
     upperBounds = upper_bounds(inYamlDoc)
