@@ -32,5 +32,5 @@ for {i in I} {
 #printf "\n" >> investment.csv;
 
 #close investment.csv;
-display investment>stormwise_tmdl.out;
-display x>>stormwise_tmdl.out;
+#display investment>stormwise_tmdl.out;
+#display x>>stormwise_tmdl.out;
