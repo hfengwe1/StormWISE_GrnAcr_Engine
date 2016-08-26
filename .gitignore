@@ -2,6 +2,7 @@
 .spyderproject
 *.pyc
 *.dat
+*.yaml
 # Compiled source #
 ###################
 *.com
