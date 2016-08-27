@@ -19,7 +19,7 @@ from stormwise_tmdl_ampl import generate_ampl_dat_file
 from stormwise_tmdl_ampl import generate_ampl_benefit_file
 from stormwise_tmdl_benefit_slopes import benefit_slopes
 
-def stormwise(inYamlDoc,inYamlBenefitDoc):
+def stormwise(amplPath,inYamlDoc,inYamlBenefitDoc):
     amplDat = generate_ampl_dat_file(inYamlDoc)
     # store the structure of the problem as found in the YAML file
     with open('StormWISE_TMDL_Engine/stormwise_tmdl.dat', 'w') as fout:     
@@ -30,7 +30,8 @@ def stormwise(inYamlDoc,inYamlBenefitDoc):
     with open('StormWISE_TMDL_Engine/stormwise_tmdl_benefits.dat', 'w') as fout:
         fout.write(amplBenefits)
         fout.close()
-    call(["/Applications/amplide.macosx64/ampl","StormWISE_TMDL_Engine/stormwise_tmdl.run"])
+    #call(["/Applications/amplide.macosx64/ampl","StormWISE_TMDL_Engine/stormwise_tmdl.run"])
+    call([amplPath,"StormWISE_TMDL_Engine/stormwise_tmdl.run"])
     with open('stormwise_tmdl.yaml', 'r') as fin:
         solution = yaml.load(fin)
         x = solution['x']
