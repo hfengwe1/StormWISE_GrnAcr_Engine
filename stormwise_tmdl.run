@@ -1,7 +1,7 @@
 reset;
-model StormWISE_TMDL_Engine/stormwise_tmdl.mod;
-data StormWISE_TMDL_Engine/stormwise_tmdl.dat;
-data StormWISE_TMDL_Engine/stormwise_tmdl_benefits.dat;
+model stormwise_tmdl.mod;
+data stormwise_tmdl.dat;
+data stormwise_tmdl_benefits.dat;
 option solver "/Applications/amplide.macosx64/minos";
 solve;
 
