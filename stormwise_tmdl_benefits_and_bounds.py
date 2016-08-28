@@ -2,6 +2,9 @@
 # plus code for converting benefit units based on file "convert_benefits.yaml"
 # Copyright Arthur E. McGarity, 2016
 
+from Arts_Python_Tools.tools import format_dict_as_strings
+from Arts_Python_Tools.tools import multiply_dict_by_constant
+
 def convert_benefit_units(benDict,benefitConvertUnits):
     dct = deepcopy(benDict)
     for t in sorted(dct):   # the first level is the benefit type
