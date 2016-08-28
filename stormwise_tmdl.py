@@ -17,7 +17,7 @@ import yaml
 from subprocess import call
 from stormwise_tmdl_ampl import generate_ampl_dat_file
 from stormwise_tmdl_ampl import generate_ampl_benefit_file
-from stormwise_tmdl_benefit_slopes import benefit_slopes
+from stormwise_tmdl_benefits_and_bounds import benefit_slopes
 
 def stormwise(amplPath,inYamlDoc,inYamlBenefitDoc):
     amplDat = generate_ampl_dat_file(inYamlDoc)
