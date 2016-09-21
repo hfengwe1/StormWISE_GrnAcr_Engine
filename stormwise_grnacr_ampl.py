@@ -5,8 +5,8 @@ Created on Wed Aug  3 18:53:23 2016
 @author: arthur
 """
 
-from stormwise_tmdl_benefits_and_bounds import upper_bounds
-from stormwise_tmdl_benefits_and_bounds import benefit_slopes
+from stormwise_grnacr_benefits_and_bounds import upper_bounds
+from stormwise_grnacr_benefits_and_bounds import benefit_slopes
 
 def generate_ampl_dat_file(inYamlDoc):
     ampl = ""   # string containing ampl code to be returned when filled
@@ -94,7 +94,7 @@ def main(inYamlFile):
     with open(inYamlFile, 'r') as fin:
         inYamlDoc = yaml.load(fin)
         ampl = generate_ampl_dat_file(inYamlDoc)
-    with open('stormwise_tmdl.dat', 'w') as fout:     
+    with open('stormwise_grnacr.dat', 'w') as fout:     
         fout.write(ampl)
         fout.close()
 main('wingohocking.yaml')

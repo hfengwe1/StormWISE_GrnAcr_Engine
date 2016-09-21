@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-stormwise_tmdl.py
+stormwise_grnacr.py
 
 stormwise() function:
 	takes a stormwise input file in YAML format
 	computes benefit slopes and investment upper bounds
 	outputs an AMPL dat file
-	and then runs AMPL on the dat file to generate stormwise_tmdl output
+	and then runs AMPL on the dat file to generate stormwise_grnacr output
 
 evaluate_solution() function:
 	takes dictionaries containing a solution, benefit slopes, and the YAML document defining the problem
@@ -15,23 +15,23 @@ evaluate_solution() function:
 """
 import yaml
 from subprocess import call
-from stormwise_tmdl_ampl import generate_ampl_dat_file
-from stormwise_tmdl_ampl import generate_ampl_benefit_file
-from stormwise_tmdl_benefits_and_bounds import benefit_slopes
+from stormwise_grnacr_ampl import generate_ampl_dat_file
+from stormwise_grnacr_ampl import generate_ampl_benefit_file
+from stormwise_grnacr_benefits_and_bounds import benefit_slopes
 
 def stormwise(amplPath,inYamlDoc,inYamlBenefitDoc):
     amplDat = generate_ampl_dat_file(inYamlDoc)
     # store the structure of the problem as found in the YAML file
-    with open('stormwise_tmdl.dat', 'w') as fout:     
+    with open('stormwise_grnacr.dat', 'w') as fout:     
         fout.write(amplDat)
         fout.close()
 
     amplBenefits = generate_ampl_benefit_file(inYamlBenefitDoc)
-    with open('stormwise_tmdl_benefits.dat', 'w') as fout:
+    with open('stormwise_grnacr_benefits.dat', 'w') as fout:
         fout.write(amplBenefits)
         fout.close()
-    call([amplPath,"stormwise_tmdl.run"])
-    with open('stormwise_tmdl.yaml', 'r') as fin:
+    call([amplPath,"stormwise_grnacr.run"])
+    with open('stormwise_grnacr.yaml', 'r') as fin:
         solution = yaml.load(fin)
         x = solution['x']
         I = inYamlDoc['I']
