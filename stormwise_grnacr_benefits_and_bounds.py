@@ -30,14 +30,14 @@ def format_and_convert_benefit_dict(dct,formatStr,benefitConvertUnits,benefitUni
     return(displayDict)
 
 def benefit_slopes(inYamlDoc):
-        I = inYamlDoc['I']
-        J = inYamlDoc['J']
-        K = inYamlDoc['K']
-        KONJ = inYamlDoc['KONJ']
-        T = inYamlDoc['T']
-        cost = inYamlDoc['cost']
-        export = inYamlDoc['export']
-        eta = inYamlDoc['eta']
+        I = inYamlDoc['I']  # subwatershed index
+        J = inYamlDoc['J']  # landuse index
+        K = inYamlDoc['K']  # Gi type index
+        KONJ = inYamlDoc['KONJ']  # GI types [k] on Landuse [j]
+        T = inYamlDoc['T']  # GI benefit index
+        cost = inYamlDoc['cost']  # cost of GI type [k] on landuse [j]
+        export = inYamlDoc['export']  # the export coefficient of GI benefit [t] on land use [j]
+        eta = inYamlDoc['eta']  # benefit generation efficiency [t] of GI [k] in watershed [i]
         s = {}  # will be a dictionary of dictionaries
         for i in I:  # generate decision variable dictionary
             jDict = {}
@@ -48,7 +48,7 @@ def benefit_slopes(inYamlDoc):
                         tDict = {}
                         if k in KONJ[j]:
                             for t in T:
-                                tDict[t] = eta[t][k][i]*export[t][j]/cost[k][j]
+                                tDict[t] = eta[t][k][i]*export[t][j]/float(cost[k][j])
                         else:
                             for t in T:
                                 tDict[t] = 0.0
@@ -67,6 +67,8 @@ def upper_bounds(inYamlDoc):
         I = inYamlDoc['I']
         J = inYamlDoc['J']
         K = inYamlDoc['K']
+        Kg=inYamlDoc['Kg']
+        Kr=inYamlDoc['Kr']
         KONJ = inYamlDoc['KONJ']
         cost = inYamlDoc['cost']
         f = inYamlDoc['f']
@@ -78,9 +80,11 @@ def upper_bounds(inYamlDoc):
                 kDict = {}
                 if KONJ[j] != None:
                     for k in K:                   
-                        if k in KONJ[j]:
-                            kDict[k] = cost[k][j]*f[k][j][i]*area[j][i]
-                        else:
+                        if k in Kg:
+                            kDict[k] = cost[k][j]*f["3_tree_trench"][j][i]*area[j][i]	
+                        elif k in Kr:
+                            kDict[k] = cost[k][j]*f["8_cistern"][j][i]*area[j][i]
+                        else: 
                             kDict[k] = 0.0
                 else:
                     for k in K:
